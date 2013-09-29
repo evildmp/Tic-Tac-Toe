@@ -2,6 +2,35 @@
 Tic-Tac-Toe, or Noughts & Crosses
 =================================
 
+We - human beings - have the concept of a line, irreducible to relationships
+between points.
+
+Can this be represented natively at the level of Python code?
+
+If not, could it be represented through a higher-level object that represents
+it internally as a collection of points on a Cartesian grid (and would this be
+worth the effort anyway?)
+
+It seems hard to justify the effort required to describe a line in general,
+when all that matters are *winning* lines. We use the concept of 'lineness'
+while playing, but it's not actually part of the conceptual space of the game
+itself.
+
+Look-ahead
+==========
+
+Given the current state of the board, is there a move I can make that would win? Put it in the winning pile.
+
+Of the other moves:
+    is there one that leaves the opponent with a winning move? Put it in the
+    reject pile.
+
+    is there one that leaves the opponent with a losing move? Put it in the
+    winning pile.
+
+    Hypothesise each of the other moves, and each possible response of the
+    opponent. Given the current state of the board...
+
 Strategies
 ==========
 
