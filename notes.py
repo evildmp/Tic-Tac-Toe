@@ -28,3 +28,31 @@ class Game(object):
         # we have exhausted all possible moves; it's a draw
         if self.move >= 8:
             sys.exit("It's a draw")
+
+# draw the board
+PLAYERS = {0: "x", 1: "o", None: ""}
+
+    def draw(self):
+        print
+        print "\n-----\n".join(["|".join([PLAYERS[self.cells[(x,y)].player] or str(y*3+x) for x in range(0,3)]) for y in range(0,3)])
+
+
+class Cell(object):
+
+    def __init__(self, board):
+        self.board = board
+        self.player = None
+
+    def mark(self, player=None):
+        # marks a cell for a player
+        if player == None:
+            self.player = self.board.game.player
+        else:
+            self.player = player
+        self.board.draw()
+        if self.board.game.check_game_state() != None:
+
+             "Winner", self.board.game.check_game_state()
+            sys.exit()
+        self.board.game.player = -cmp(self.board.game.player, 1)
+        self.board.game.move += 1
