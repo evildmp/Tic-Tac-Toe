@@ -46,8 +46,8 @@ class Board(object):
         self.dimensions = dimensions or self.game.dimensions
         self.x, self.y = self.dimensions[0], self.dimensions[1]
 
-        self.create_cells()
-        self.create_winning_lines()
+        self.create_cells()  # sets self.cells
+        self.create_winning_lines()  # sets self.winning_lines
 
     def create_cells(self):
         self.cells = {}
@@ -106,16 +106,29 @@ class Board(object):
     def check_for_winning_line(self, player=None, cell=None):
         if not player == None:
             fingerprint = self.get_fingerprint(player)
+            print "player fingerprint", fingerprint
             for wl in self.winning_lines:
-                if fingerprint & wl.fingerprint:
+                print "wl fp", wl.fingerprint, fingerprint & wl.fingerprint
+                if fingerprint & wl.fingerprint == wl.fingerprint:
+                    print "match", wl.fingerprint
                     return True
 
+    def identify_winning_moves(self, player):
+        """docstring for identify_winning_moves"""
+        # get possible moves
+        possibles = self.get_positions(player=None)
+        # which of the possibles makes a winning line?
+        print "checking possibles ----"
+        for possible in possibles:
+            hypothetical = Board(game=self.game, dimensions=self.dimensions, winning_length=self.winning_length)
+            hypothetical.cells[possible] = Cell(board=hypothetical, player=player)
+            print possible, hypothetical.check_for_winning_line(player=player)
 
 class Cell(object):
 
-    def __init__(self, board):
+    def __init__(self, board=None, player=None):
         self.board = board
-        self.player = None
+        self.player = player
 
     def mark(self, player=None):
         # marks a cell for a player

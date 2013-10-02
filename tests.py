@@ -37,9 +37,18 @@ class TestBoard(unittest.TestCase):
                     board
                     )
 
-    def test_get_positions_none(self):
+    def test_get_positions_of_0_none(self):
         board = Board(dimensions=(3,3), winning_length=3)
-        self.assertEqual(board.get_positions(player=0), [])
+        self.assertEqual(
+            board.get_positions(player=0),
+            [])
+
+    def test_get_positions_all_empty(self):
+        board = Board(dimensions=(3,3), winning_length=3)
+        self.assertItemsEqual(
+            board.get_positions(player=None),
+            board.cells
+            )
 
     def test_get_positions_multiple(self):
         board = Board(dimensions=(3,3), winning_length=3)
@@ -55,6 +64,10 @@ class TestBoard(unittest.TestCase):
         self.assertItemsEqual(
             board.get_positions(player=1),
             [(1, 0), (1, 1), (1,2)]
+            )
+        self.assertItemsEqual(
+            board.get_positions(player=None),
+            [(0,0), (2,0), (0,2), (2,2)]
             )
 
     def test_create_lines(self):
@@ -149,7 +162,16 @@ class TestBoard(unittest.TestCase):
         for y in range(0,3):
             board.cells[(1,y)].mark(player=1)
         self.assertTrue(board.check_for_winning_line(player=1))
+        self.assertFalse(board.check_for_winning_line(player=0))
 
+    def test_identify_winning_moves(self):
+        board = Board(dimensions=(3,3), winning_length=3)
+        for x in range(0,2):
+            board.cells[(x,1)].mark(player=0)
+        self.assertEqual(
+            board.identify_winning_moves(player=0),
+            [(2,1)]
+        )
 
 
 class TestWinningLine(unittest.TestCase):
@@ -172,6 +194,7 @@ class TestWinningLine(unittest.TestCase):
         # bits 0,5,8
         w = WinningLine([(0,0,), (0,1), (0,2)], board)
         self.assertEqual(w.fingerprint, 73)
+
 
 
 if __name__ == '__main__':

@@ -19,17 +19,28 @@ itself.
 Look-ahead
 ==========
 
-Given the current state of the board, is there a move I can make that would win? Put it in the winning pile.
+Recursing up the tree:
 
-Of the other moves:
-    is there one that leaves the opponent with a winning move? Put it in the
-    reject pile.
+    Given the current state of the board, is there a move I can make that would
+    win? Put it in the winning pile.
 
-    is there one that leaves the opponent with a losing move? Put it in the
-    winning pile.
+    Of the other moves:
+        is there one that leaves the opponent with a winning move? Put it in the
+        reject pile.
 
-    Hypothesise each of the other moves, and each possible response of the
-    opponent. Given the current state of the board...
+        is there one that leaves the opponent with a losing move? Put it in the
+        winning pile.
+
+        Hypothesise each of the other moves, and each possible response of the
+        opponent. Given the current state of the board...
+
+What are we going to do with this information?
+
+Another way of looking ahead
+----------------------------
+
+A guaranteed winning position is one that allows me to complete more than one
+line in a single move, as long as my opponent can't win on the next move.
 
 Strategies
 ==========
