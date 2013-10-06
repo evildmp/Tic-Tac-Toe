@@ -1,5 +1,6 @@
 import sys
-from random import choice
+import copy
+import random
 
 class Game(object):
     """
@@ -38,19 +39,20 @@ class WinningLine(object):
 
 
 class Board(object):
-    def __init__(self, game=None, dimensions=(), winning_length=0):
+    def __init__(self, game=None, dimensions=(), winning_length=0, cells=None):
         self.game = game
         self.winning_length=winning_length
+        self.cells = cells or {}
 
         # board dimensions must be declared
         self.dimensions = dimensions or self.game.dimensions
         self.x, self.y = self.dimensions[0], self.dimensions[1]
 
-        self.create_cells()  # sets self.cells
+        if not self.cells:
+            self.create_cells()  # sets self.cells
         self.create_winning_lines()  # sets self.winning_lines
 
     def create_cells(self):
-        self.cells = {}
         for y in range(0,self.y):
             for x in range(0,self.x):
                 self.cells[(x,y)] = Cell(self)
@@ -104,25 +106,84 @@ class Board(object):
             ])
 
     def check_for_winning_line(self, player=None, cell=None):
-        if not player == None:
+        if player != None:
             fingerprint = self.get_fingerprint(player)
-            print "player fingerprint", fingerprint
+            # print "player fingerprint", fingerprint
             for wl in self.winning_lines:
-                print "wl fp", wl.fingerprint, fingerprint & wl.fingerprint
+                # print "wl fp", wl.fingerprint, fingerprint & wl.fingerprint
                 if fingerprint & wl.fingerprint == wl.fingerprint:
-                    print "match", wl.fingerprint
+                    # print "match", wl.fingerprint
                     return True
 
-    def identify_winning_moves(self, player):
+    def identify_winning_moves(self, player, possibles=None):
         """docstring for identify_winning_moves"""
         # get possible moves
-        possibles = self.get_positions(player=None)
+        possibles = possibles or []
+        winners = []
         # which of the possibles makes a winning line?
-        print "checking possibles ----"
         for possible in possibles:
-            hypothetical = Board(game=self.game, dimensions=self.dimensions, winning_length=self.winning_length)
-            hypothetical.cells[possible] = Cell(board=hypothetical, player=player)
-            print possible, hypothetical.check_for_winning_line(player=player)
+            hypothetical = copy.deepcopy(self)
+            hypothetical.cells[possible].player=player
+            if hypothetical.check_for_winning_line(player=player):
+                winners.append(possible)
+        return winners
+
+    def identify_win_creators(self, player, possibles=None):
+        possibles = possibles or []
+        win_creators = []
+        for possible in possibles:
+            hypothetical = copy.deepcopy(self)
+            hypothetical.cells[possible].player=player
+            hypothetical_possibles = hypothetical.get_positions(player=None)
+            wms = hypothetical.identify_winning_moves(player=player, possibles=hypothetical_possibles)
+            if len(wms) > 1:
+                win_creators.append(possible)
+        return win_creators
+
+    def choose_next_move(self, player, possibles=None):
+        possibles = possibles or []
+
+        # first deal with the case where we can win
+        winners = self.identify_winning_moves(player, possibles)
+        if winners:
+            return "win", random.choice(winners)
+
+        # the case where we block the opponent's winning move
+        opponent_winners = self.identify_winning_moves(player=-cmp(player, 1), possibles=possibles)
+        if opponent_winners:
+            if len(opponent_winners) == 1:
+                return "avoid losing", opponent_winners[0]
+
+            # this is just temporary; it won't do as a real solution
+            # even if this is a 'losing' position, we should aim for the best
+            # response anyway; the opponent might make a mistake
+            # if the opponent has more than one way to win, just hope for the best
+            else:
+                return "hope to avoid losing", random.choice(opponent_winners)
+
+        # a case where neither can win on this go, but we can set a win for
+        # the next move
+        win_creators = self.identify_win_creators(player=player, possibles=possibles)
+        if win_creators:
+            return "win next", random.choice(win_creators)
+
+        else:
+            # so far untested
+
+            # for all the things we might do, see what the opponent's best
+            # response is
+            for possible in possibles:
+                hypothetical = copy.deepcopy(self)
+                hypothetical.cells[possible].player=player
+                opponents_best = hypothetical.choose_next_move(player=-cmp(player, 1))
+                if "hope" in opponents_best[0]:
+                    return "win", possible
+
+                # we should never get here
+                if "win" in opponents_best[0]:
+                    raise Exception
+
+
 
 class Cell(object):
 

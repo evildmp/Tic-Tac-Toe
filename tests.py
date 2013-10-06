@@ -166,13 +166,109 @@ class TestBoard(unittest.TestCase):
 
     def test_identify_winning_moves(self):
         board = Board(dimensions=(3,3), winning_length=3)
-        for x in range(0,2):
-            board.cells[(x,1)].mark(player=0)
-        self.assertEqual(
-            board.identify_winning_moves(player=0),
+        board.cells[(0,1)].mark(player=0)
+        board.cells[(1,1)].mark(player=0)
+
+        board.cells[(0,0)].mark(player=1)
+        board.cells[(2,0)].mark(player=1)
+
+        board.cells[(2,2)].mark(player=1)
+        board.cells[(1,2)].mark(player=1)
+
+        possibles = board.get_positions(player=None)
+        self.assertItemsEqual(
+            board.identify_winning_moves(player=0, possibles=possibles),
             [(2,1)]
         )
 
+        possbles = board.get_positions(player=None)
+        self.assertItemsEqual(
+            board.identify_winning_moves(player=1, possibles=possibles),
+            [(2,1), (1,0), (0,2)]
+        )
+
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=1)
+        board.cells[(2,2)].mark(player=1)
+
+        possibles = board.get_positions(player=None)
+        self.assertItemsEqual(
+            board.identify_winning_moves(player=1, possibles=possibles),
+            [(1,1)]
+        )
+
+    def test_identify_win_creators(self):
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,2)].mark(player=0)
+        board.cells[(1,1)].mark(player=1)
+        possibles = board.get_positions(player=None)
+        self.assertItemsEqual(
+            board.identify_win_creators(player=0, possibles=possibles),
+            [(0,2), (2,0)]
+        )
+
+    def test_choose_next_move_to_win(self):
+        # winning move available at (1,1)
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,2)].mark(player=0)
+        possibles = board.get_positions(player=None)
+        self.assertEqual(
+            board.choose_next_move(player=0, possibles=possibles),
+            ("win", (1,1))
+        )
+
+        # 3 winning moves available at (1,1), (1,0), (2,1)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,0)].mark(player=0)
+        board.cells[(2,2)].mark(player=0)
+        possibles = board.get_positions(player=None)
+        next_move = board.choose_next_move(player=0, possibles=possibles)
+        self.assertTrue(next_move[0], "win")
+        self.assertTrue(
+            next_move[1] in
+            [(1,1), (1,0), (2,1)]
+        )
+
+    def test_choose_next_move_to_prevent_opponent_win(self):
+        # opponent has winning move available at (1,1)
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,2)].mark(player=0)
+        possibles = board.get_positions(player=None)
+        self.assertEqual(
+            board.choose_next_move(player=1, possibles=possibles),
+            ("avoid losing", (1,1))
+        )
+
+    def test_choose_next_move_to_block_one_winning_move(self):
+        # opponent has winning move available at (1,1) and
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,0)].mark(player=0)
+        board.cells[(0,2)].mark(player=0)
+        possibles = board.get_positions(player=None)
+        next_move = board.choose_next_move(player=1, possibles=possibles)
+        self.assertTrue(next_move[0], "hope to avoid losing")
+        self.assertTrue(next_move[1] in [(0,1), (1,0)])
+
+    def test_choose_next_move_win_creator(self):
+        # can win on the next move with (0,2) or (2,0)
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.cells[(2,2)].mark(player=0)
+        board.cells[(1,1)].mark(player=1)
+        possibles = board.get_positions(player=None)
+        next_move = board.choose_next_move(player=0, possibles=possibles)
+        self.assertTrue(next_move[0], "win next")
+        self.assertTrue(
+            next_move[1] in [(0,2), (2,0)])
+
+    def test_choose_next_win_open(self):
+        board = Board(dimensions=(3,3), winning_length=3)
+        board.cells[(0,0)].mark(player=0)
+        board.choose_next_move(player=1)
 
 class TestWinningLine(unittest.TestCase):
     def test_has_correct_fingerprint(self):
